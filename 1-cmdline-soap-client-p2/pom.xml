@@ -1,0 +1,159 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>1-cmdline-soap-client-p2</groupId>
+  <artifactId>1-cmdline-soap-client-p2</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+
+	<properties>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<cxf.version>3.1.7</cxf.version>
+		<!-- 
+		<web-service-wsdl-url>http://localhost:8080/1-ws-rest-p3/services/soap/shapecalc?wsdl</web-service-wsdl-url>
+		-->
+		<web-service-wsdl-url>http://localhost:8080/1-cmdline-soap-rest-ws/services/soap/shapecalc?wsdl</web-service-wsdl-url>
+	</properties>
+
+	<dependencies>
+
+		<!-- =========== logging dependencies ================= -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+			<version>1.7.21</version>
+		</dependency>
+
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>1.1.7</version>
+		</dependency>
+
+<!-- =========== testing dependencies ================= -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.hamcrest</groupId>
+					<artifactId>hamcrest-core</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+	<!-- This will get hamcrest-core automatically -->
+		<dependency>
+			<groupId>org.hamcrest</groupId>
+			<artifactId>hamcrest-library</artifactId>
+			<version>1.3</version>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+
+
+	<build>
+
+		<plugins>
+
+        <!-- ================  CLEAN ========================== --> 
+			<plugin>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>3.0.0</version>
+				<configuration>
+					<filesets>
+                        <fileset>
+                            <directory>src/main/java/com/eli/calc/shape/service</directory>
+                            <followSymlinks>false</followSymlinks>
+                        </fileset>
+                        <!--
+						<fileset>
+							<directory>src/main/java/com/eli/calc/shape/domain</directory>
+							<followSymlinks>false</followSymlinks>
+						</fileset>
+						<fileset>
+							<directory>src/main/java/com/eli/calc/shape/model</directory>
+							<followSymlinks>false</followSymlinks>
+						</fileset>
+						<fileset>
+							<directory>src/main/java/com/eli/calc/shape/service</directory>
+							<followSymlinks>false</followSymlinks>
+						</fileset>
+						-->
+					</filesets>
+				</configuration>
+			</plugin>
+
+        <!-- ================  WSDL2JAVA ========================== --> 
+			<!-- Generate Java classes from WSDL during build -->
+			<plugin>
+				<groupId>org.apache.cxf</groupId>
+				<artifactId>cxf-codegen-plugin</artifactId>
+				<version>${cxf.version}</version>
+				<executions>
+					<execution>
+						<id>generate-sources</id>
+						<phase>generate-sources</phase>
+						<configuration>
+
+							<!-- which source folder the generated classes should be placed in 
+								a package -->
+
+							<sourceRoot>${project.basedir}/src/main/java</sourceRoot>
+							<wsdlOptions>
+								<wsdlOption>
+
+									<!-- get the wsdl file from this location -->
+
+									<wsdl>${web-service-wsdl-url}</wsdl>
+									<extraargs>
+										<extraarg>-client</extraarg>
+									</extraargs>
+								</wsdlOption>
+							</wsdlOptions>
+						</configuration>
+						<goals>
+							<goal>wsdl2java</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+
+        <!-- ================  BUILD ========================== --> 
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.5.1</version>
+				<configuration>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
+				</configuration>
+			</plugin>
+
+        <!-- ================  EXE JAR ========================== --> 
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.0.0</version>
+				<configuration>
+					<outputDirectory>${project.build.directory}/jarDir</outputDirectory>
+					<finalName>1-cmdline-app-soap-client-p2</finalName>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<mainClass>com.eli.calc.shape.apps.CmdLineShapeCalcApp</mainClass>
+							<classpathPrefix>lib/</classpathPrefix>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+
+		</plugins>
+
+	</build>
+
+</project>
