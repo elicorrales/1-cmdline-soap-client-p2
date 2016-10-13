@@ -28,6 +28,27 @@ public class CmdLineShapeCalcApp {
 	
 	private final static String continueMessage = "\n\nPress <ENTER> to continue with app:";
 	
+	private final static String noSoapServiceMessage = 
+												"\n\n"
+												+"=====================================\n"
+												+"WARNING: No connection to Service!\n"
+												+"=====================================\n"
+												+"Press <ENTER>\n\n";
+
+	private final static String shapeNamesObsoleteMessage = 
+												"\n\n"
+												+"=====================================\n"
+												+"WARNING: Service's ShapeName(s) changed\n"
+												+"=====================================\n"
+												+"Press <ENTER>\n\n";
+
+	private final static String calcTypesObsoleteMessage = 
+												"\n\n"
+												+"=====================================\n"
+												+"WARNING: Service's CalcType(s) changed\n"
+												+"=====================================\n"
+												+"Press <ENTER>\n\n";
+
 	private static String shapesString = "";
 	static {
 		int i=0;
@@ -64,13 +85,14 @@ public class CmdLineShapeCalcApp {
 	
 	private final BufferedReader in;
 
+	private final URL wsdlURL;
+	
 	CmdLineShapeCalcApp(BufferedReader in, URL wsdlURL) {
 
 		this.in = in;
-
-        soapClient = new ShapeCalculatorWebService_ShapeCalculatorWebServiceImplPort_Client(wsdlURL);
-
+		this.wsdlURL = wsdlURL;
 		
+		connectToSoapService();
 	}
 
 	public void doIt() {
@@ -78,7 +100,7 @@ public class CmdLineShapeCalcApp {
 		selectAction();
 
 	}
-	
+
 
 	private final static String mainMenu = "\n\nSelect Action:\n"
 												+ "-----------------------------\n"
@@ -99,11 +121,23 @@ public class CmdLineShapeCalcApp {
 												+ "-----------------------------\n"
 												+ "Enter number:";
 	private void selectAction() {
-		
+	
 		String line = "";
 		
 		for (;;) {
 
+			if (!connectToSoapService()) {
+				try {
+					System.out.println(noSoapServiceMessage);
+					line=this.in.readLine();
+				} catch (IOException e) {
+					logger.debug(e.getMessage(),e);
+				}
+				continue;
+			}
+
+			checkIfThisAppIsOutdated();
+		
 			System.out.print(mainMenu);
 
 			try {
@@ -155,6 +189,30 @@ public class CmdLineShapeCalcApp {
 			}
 		} // end of for loop
 	}
+
+	private void checkIfThisAppIsOutdated() {
+
+		// this app's generated classes may need re-generation if the service
+		// has new items...
+		try {
+	
+			if (ShapeName.values().length != soapClient.getShapeNames().size()){
+				
+				System.out.println(shapeNamesObsoleteMessage);
+				this.in.readLine();
+			}
+			
+			if (CalcType.values().length != soapClient.getCalcTypes().size()) {
+				
+				System.out.println(calcTypesObsoleteMessage);
+				this.in.readLine();
+			}
+
+		} catch (Exception e) {
+			logger.debug(e.getMessage(),e);
+		}
+	}
+	
 	
 	private void requestCalculationRunAndReport() {
 
@@ -257,19 +315,33 @@ public class CmdLineShapeCalcApp {
 
 			try {
 				line=this.in.readLine();
-			} catch (IOException e) {
-				logger.debug(e.getMessage(),e);
-			}
-
-			try {
 				dimension = Double.parseDouble(line);
 				return dimension;
-			} catch (NumberFormatException e) { }
-
+			} catch (IOException e) {
+				logger.debug(e.getMessage(),e);
+			} catch (NumberFormatException e) {
+				System.err.println(line+" is not a number.");
+			}
 		}
 	}	
 	
 	
+	private boolean connectToSoapService() {
+		
+		boolean connected = false;
+		
+		if (null==soapClient) {
+			try {
+				soapClient = new ShapeCalculatorWebService_ShapeCalculatorWebServiceImplPort_Client(wsdlURL);
+				connected = true;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return connected;
+	}
+
 	public static void main(String[] args) throws Exception {
 
         URL wsdlURL = ShapeCalculatorWebServiceImplService.WSDL_LOCATION;

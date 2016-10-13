@@ -45,6 +45,26 @@ public final class ShapeCalculatorWebService_ShapeCalculatorWebServiceImplPort_C
  
     }
 
+    public List<ShapeName> getShapeNames() {
+ 
+    System.out.println("Invoking getShapeNames...");
+    com.eli.calc.shape.service.ws.ShapeNamesResponse _getShapeNames__return = port.getShapeNames();
+
+        checkForError(_getShapeNames__return);
+
+        return _getShapeNames__return.getShapeNames();
+    }
+    
+    public List<CalcType> getCalcTypes() {
+ 
+    System.out.println("Invoking getCalcTypes...");
+    com.eli.calc.shape.service.ws.CalcTypesResponse _getCalcTypes__return = port.getCalcTypes();
+
+        checkForError(_getCalcTypes__return);
+
+        return _getCalcTypes__return.getCalcTypes();
+    }
+
     public void deletePendingRequests() {
 
         System.out.println("Invoking deletePendingRequests...");
